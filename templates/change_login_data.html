@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>Change Login Data</title>
+{% endblock %}
+
+{% block body %}
+    <a href="{{ url_for('user_profile') }}">Go Back to Profile</a>
+    <h1>Change Login Data</h1>
+    <form action="{{ url_for('change_login_data') }}" method="post">
+        {{ form.csrf_token }}
+        {{ form.username.label }} {{ form.username }}<br>
+        {{ form.email.label }} {{ form.email }}<br>
+        {{ form.password.label }} {{ form.password }}<br>
+        {{ form.submit }}
+    </form>
+{% endblock %}

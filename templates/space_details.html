@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>{{ space.name }}</title>
+{% endblock %}
+
+{% block body %}
+        <h1>{{ space.name }}</h1>
+
+        <div class="space-details-actions">
+            {% if current_user.is_authenticated and current_user.id == space.user_id %}
+                <form action="{{ url_for('delete_space', space_id=space.id) }}" method="POST">
+                    <input type="submit" value="Delete" class="btn btn-danger">
+                </form>
+            {% endif %}
+        </div>
+
+        <div class="space-details-carousel-container">
+            {% if space.photos %}
+                <div class="space-details-carousel">
+                    {% for photo in space.photos.split(',') %}
+                        <img src="{{ url_for('static', filename=photo) }}" alt="Photo of {{ space.name }}">
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="space-details-info">
+            <h2>Details</h2>
+            <p><strong>Address:</strong> {{ space.address }}</p>
+            <p><strong>Description:</strong> {{ space.description }}</p>
+            <p><strong>Created By:</strong> {{ space.user_name }}</p>
+            <p><strong>Date Created:</strong> {{ space.date_created.strftime('%Y-%m-%d') }}</p>
+        </div>
+
+        <div class="space-details-ratings">
+            <h2>Ratings</h2>
+            {% if ratings %}
+                {% for rating in ratings %}
+                    <div class="rating-block">
+                        <div class="rating-header">
+                            <p><strong>Rating by:</strong> {{ rating.user_name }}</p>
+                            <p><strong>Date:</strong> {{ rating.date_created.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                        <p><strong>Rating Text:</strong> {{ rating.text }}</p>
+                        <p><strong>Overall Average Rating:</strong> {{ (rating.cleanliness + rating.facilities + rating.accessibility + rating.natural_diversity + rating.eco_friendly_practices + rating.safety_security + rating.recreational_opportunities + rating.community_engagement + rating.educational_value + rating.scenic_beauty) / 10 | round(1) }}</p>
+                        <div class="factor-cols">
+                            <div class="factor-col-1">
+                                <ul class="rating-details">
+                                    <li>Cleanliness: {{ rating.cleanliness }}</li>
+                                    <li>Facilities: {{ rating.facilities }}</li>
+                                    <li>Accessibility: {{ rating.accessibility }}</li>
+                                    <li>Natural Diversity: {{ rating.natural_diversity }}</li>
+                                    <li>Eco-friendly Practices: {{ rating.eco_friendly_practices }}</li>
+                                </ul>
+                            </div>
+                            <div class="factor-col-2">
+                                <ul class="rating-details">
+                                    <li>Safety & Security: {{ rating.safety_security }}</li>
+                                    <li>Recreational Opportunities: {{ rating.recreational_opportunities }}</li>
+                                    <li>Community Engagement: {{ rating.community_engagement }}</li>
+                                    <li>Educational Value: {{ rating.educational_value }}</li>
+                                    <li>Scenic Beauty: {{ rating.scenic_beauty }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% if current_user.is_authenticated and current_user.id == rating.user_id %}
+                            <form action="{{ url_for('delete_rating', rating_id=rating.id) }}" method="post">
+                                <input type="submit" value="Delete Rating" class="btn btn-danger">
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No ratings available for this space.</p>
+            {% endif %}
+        </div>
+
+        <div class="add-rating">
+            <h2>Add Rating</h2>
+            {% if current_user.is_authenticated %}
+                <form action="{{ url_for('add_rating', space_id=space.id) }}" method="POST" class="rating-form">
+                    {{ ratingform.hidden_tag() }}
+                    <fieldset>
+                        <legend>Rate the Space</legend>
+                        <div class="rating-row">
+                            <div class="rating-group">
+                                <label>Cleanliness</label>
+                                <div id="cleanliness-rating" class="star-rating"></div>
+                                {{ ratingform.cleanliness(style='display: none;') }}
+                            </div>
+                            <div class="rating-group">
+                                <label>Facilities</label>
+                                <div id="facilities-rating" class="star-rating"></div>
+                                {{ ratingform.facilities(style='display: none;') }}
+                            </div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="rating-group">
+                                <label>Accessibility</label>
+                                <div id="accessibility-rating" class="star-rating"></div>
+                                {{ ratingform.accessibility(style='display: none;') }}
+                            </div>
+                            <div class="rating-group">
+                                <label>Natural Diversity</label>
+                                <div id="natural_diversity-rating" class="star-rating"></div>
+                                {{ ratingform.natural_diversity(style='display: none;') }}
+                            </div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="rating-group">
+                                <label>Eco-friendly Practices</label>
+                                <div id="eco_friendly_practices-rating" class="star-rating"></div>
+                                {{ ratingform.eco_friendly_practices(style='display: none;') }}
+                            </div>
+                            <div class="rating-group">
+                                <label>Safety & Security</label>
+                                <div id="safety_security-rating" class="star-rating"></div>
+                                {{ ratingform.safety_security(style='display: none;') }}
+                            </div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="rating-group">
+                                <label>Recreational Opportunities</label>
+                                <div id="recreational_opportunities-rating" class="star-rating"></div>
+                                {{ ratingform.recreational_opportunities(style='display: none;') }}
+                            </div>
+                            <div class="rating-group">
+                                <label>Community Engagement</label>
+                                <div id="community_engagement-rating" class="star-rating"></div>
+                                {{ ratingform.community_engagement(style='display: none;') }}
+                            </div>
+                        </div>
+                        <div class="rating-row">
+                            <div class="rating-group">
+                                <label>Educational Value</label>
+                                <div id="educational_value-rating" class="star-rating"></div>
+                                {{ ratingform.educational_value(style='display: none;') }}
+                            </div>
+                            <div class="rating-group">
+                                <label>Scenic Beauty</label>
+                                <div id="scenic_beauty-rating" class="star-rating"></div>
+                                {{ ratingform.scenic_beauty(style='display: none;') }}
+                            </div>
+                        </div>
+                    </fieldset>
+                    {{ ratingform.text.label }}
+                     <textarea {{ ratingform.text }}>Your comment here...</textarea>
+                    <br>
+                    <button type="submit" class="btn">{{ ratingform.submit.label }}</button>
+                </form>
+            {% endif %}
+        </div>
+
+    <script>
+        document.querySelectorAll('.star-rating').forEach((ratingDiv) => {
+            let inputField = ratingDiv.nextElementSibling; // This is your integer field
+            for (let i = 0; i < 5; i++) {
+                let star = document.createElement('span');
+                star.innerHTML = '&#9734;'; // Empty star
+                star.onclick = () => {
+                    inputField.value = 5 - i; // Set the value of the integer field
+                    updateStars(ratingDiv, i);
+                };
+                ratingDiv.appendChild(star);
+            }
+        });
+
+        function updateStars(ratingDiv, upto) {
+            let stars = ratingDiv.children;
+            for (let i = stars.length - 1; i >= 0; i--) {
+                stars[i].innerHTML = '&#9734;'; // Empty star
+                stars[i].classList.remove('filled');
+                if (i >= upto) {
+                    stars[i].innerHTML = '&#9733;'; // Filled star
+                    stars[i].classList.add('filled');
+                }
+            }
+        }
+
+        $(document).ready(function(){
+            $('.space-details-carousel').slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                prevArrow: '<button type="button" class="slick-prev"></button>',
+                nextArrow: '<button type="button" class="slick-next"></button>',
+            });
+        });
+    </script>
+{% endblock %}

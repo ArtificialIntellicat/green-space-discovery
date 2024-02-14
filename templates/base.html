@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include jQuery and Slick Carousel -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick-theme.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Raleway&family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation Bar -->
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('add_space') }}">Add Space</a></li>
+                {% if not current_user.is_authenticated %}
+                    <li><a href="{{ url_for('registration') }}">Register</a></li>
+                {% endif %}
+            </ul>
+            <ul>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('user_profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                {% else %}
+                    <li class="login-form">
+                        <form action="{{ url_for('login') }}" method="POST" class="inline-form">
+                            {{ form.csrf_token() }}
+                            {{ form.hidden_tag() }}
+                            {{ form.email(class="form-control inline-control") }}
+                            {{ form.password(class="form-control inline-control") }}
+                            {{ form.next }}
+                            {{ form.submit(class="btn btn-primary login-btn") }}
+                        </form>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <div class="content-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block body %}{% endblock %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var loginForm = document.querySelector('.login-form form');
+            if (loginForm) {
+                var nextField = loginForm.querySelector('#next');
+                loginForm.addEventListener('click', function() {
+                    nextField.value = window.location.href;
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

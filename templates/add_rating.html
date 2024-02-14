@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>Add Rating</h2>
+<form action="{{ url_for('add_rating') }}" method="POST">
+    {{ form.hidden_tag() }}
+    space_id = HiddenField('Space ID')
+    <div class="rating">
+        <label>Cleanliness</label>
+        <div id="cleanliness-rating" class="star-rating"></div>
+        {{ form.cleanliness(style='display: none;') }}
+        <label>Facilities</label>
+        <div id="facilities-rating" class="star-rating"></div>
+        {{ form.facilities(style='display: none;') }}
+        <label>Accessibility</label>
+        <div id="accessibility-rating" class="star-rating"></div>
+        {{ form.accessibility(style='display: none;') }}
+        <label>Natural Diversity</label>
+        <div id="natural_diversity-rating" class="star-rating"></div>
+        {{ form.natural_diversity(style='display: none;') }}
+        <label>Eco-friendly Practices</label>
+        <div id="eco_friendly_practices-rating" class="star-rating"></div>
+        {{ form.eco_friendly_practices(style='display: none;') }}
+        <label>Safety & Security</label>
+        <div id="safety_security-rating" class="star-rating"></div>
+        {{ form.safety_security(style='display: none;') }}
+        <label>Recreational Opportunities</label>
+        <div id="recreational_opportunities-rating" class="star-rating"></div>
+        {{ form.recreational_opportunities(style='display: none;') }}
+        <label>Community Engagement</label>
+        <div id="community_engagement-rating" class="star-rating"></div>
+        {{ form.community_engagement(style='display: none;') }}
+        <label>Educational Value</label>
+        <div id="educational_value-rating" class="star-rating"></div>
+        {{ form.educational_value(style='display: none;') }}
+        <label>Scenic Beauty</label>
+        <div id="scenic_beauty-rating" class="star-rating"></div>
+        {{ form.scenic_beauty(style='display: none;') }}
+        {{ form.text.label }}
+        {{ form.text }}
+    </div>
+    {{ form.submit() }}
+</form>
+
+<script>
+    document.querySelectorAll('.star-rating').forEach((ratingDiv, index) => {
+    let inputField = ratingDiv.nextElementSibling; // This is your integer field
+    for (let i = 0; i < 5; i++) {
+        let star = document.createElement('span');
+        star.innerHTML = '&#9734;'; // Empty star
+        star.onclick = () => {
+            inputField.value = i + 1; // Set the value of the integer field
+            updateStars(ratingDiv, i);
+        };
+        ratingDiv.appendChild(star);
+    }
+});
+
+function updateStars(ratingDiv, upto) {
+    let stars = ratingDiv.children;
+    for (let i = 0; i < stars.length; i++) {
+        stars[i].innerHTML = i <= upto ? '&#9733;' : '&#9734;'; // Filled or empty star
+    }
+}
+</script>
+{% endblock %}

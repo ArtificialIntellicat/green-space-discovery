@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>Green Space Discovery</title>
+{% endblock %}
+
+{% block body %}
+    <h1>Green Space Discovery</h1>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Photos</th>
+            <th>Address</th>
+            <th>Description</th>
+            <th>Ratings</th>
+            <th>Created By</th>
+            <th>Date Created</th>
+        </tr>
+        {% for space in spaces %}
+        <tr>
+            <td><a href="{{ url_for('space_details', space_id=space.id) }}">{{ space.name }}</a></td>
+            <td>
+                <!-- Image Gallery Carousel -->
+                {% if space.photos %}
+                    <div class="space-carousel">
+                        {% for photo in space.photos.split(',') %}
+                            <img src="{{ url_for('static', filename=photo) }}" alt="Photo of {{ space.name }}">
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </td>
+            <td>{{ space.address }}</td>
+            <td>{{ space.description }}</td>
+            <td>
+            </td>
+            <td>{{ space.user_name }}</td>
+            <td>{{ space.date_created.date() }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        $(document).ready(function(){
+            $('.space-carousel').slick({
+                dots: true,
+                infinite: true,
+                speed: 300,
+                slidesToShow: 1,
+                prevArrow: '<button type="button" class="slick-prev"></button>',
+                nextArrow: '<button type="button" class="slick-next"></button>',
+            });
+        });
+    </script>
+{% endblock %}
