@@ -39,36 +39,147 @@
                 {% for rating in ratings %}
                     <div class="rating-block">
                         <div class="rating-header">
-                            <p><strong>Rating by:</strong> {{ rating.user_name }}</p>
-                            <p><strong>Date:</strong> {{ rating.date_created.strftime('%Y-%m-%d') }}</p>
-                        </div>
-                        <p><strong>Rating Text:</strong> {{ rating.text }}</p>
-                        <p><strong>Overall Average Rating:</strong> {{ (rating.cleanliness + rating.facilities + rating.accessibility + rating.natural_diversity + rating.eco_friendly_practices + rating.safety_security + rating.recreational_opportunities + rating.community_engagement + rating.educational_value + rating.scenic_beauty) / 10 | round(1) }}</p>
-                        <div class="factor-cols">
-                            <div class="factor-col-1">
-                                <ul class="rating-details">
-                                    <li>Cleanliness: {{ rating.cleanliness }}</li>
-                                    <li>Facilities: {{ rating.facilities }}</li>
-                                    <li>Accessibility: {{ rating.accessibility }}</li>
-                                    <li>Natural Diversity: {{ rating.natural_diversity }}</li>
-                                    <li>Eco-friendly Practices: {{ rating.eco_friendly_practices }}</li>
-                                </ul>
-                            </div>
-                            <div class="factor-col-2">
-                                <ul class="rating-details">
-                                    <li>Safety & Security: {{ rating.safety_security }}</li>
-                                    <li>Recreational Opportunities: {{ rating.recreational_opportunities }}</li>
-                                    <li>Community Engagement: {{ rating.community_engagement }}</li>
-                                    <li>Educational Value: {{ rating.educational_value }}</li>
-                                    <li>Scenic Beauty: {{ rating.scenic_beauty }}</li>
-                                </ul>
+                            <div><strong>Rating by:</strong> {{ rating.user_name }} | <strong>Date:</strong> {{ rating.date_created.strftime('%Y-%m-%d') }}</div>
+                            <div>
+                                {% if current_user.is_authenticated and current_user.id == rating.user_id %}
+                                    <form action="{{ url_for('delete_rating', rating_id=rating.id) }}" method="post">
+                                        <input type="submit" value="Delete Rating" class="btn btn-danger">
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
-                        {% if current_user.is_authenticated and current_user.id == rating.user_id %}
-                            <form action="{{ url_for('delete_rating', rating_id=rating.id) }}" method="post">
-                                <input type="submit" value="Delete Rating" class="btn btn-danger">
-                            </form>
-                        {% endif %}
+                        <div class="rating-content">
+                            <p><strong>Overall Average Rating:</strong>
+                                <span class="stars">
+                                    {% set total_rating = (rating.cleanliness + rating.facilities + rating.accessibility + rating.natural_diversity + rating.eco_friendly_practices + rating.safety_security + rating.recreational_opportunities + rating.community_engagement + rating.educational_value + rating.scenic_beauty) / 10 %}
+                                    {% set full_stars = total_rating | int %}
+                                    {% set half_star = (total_rating - full_stars) >= 0.5 %}
+                                    {% set empty_stars = 5 - full_stars - half_star %}
+
+                                    {% for _ in range(full_stars) %}
+                                        &#9733; <!-- Filled star -->
+                                    {% endfor %}
+                                    {% if half_star %}
+                                        &frac12; <!-- Half star -->
+                                    {% endif %}
+                                    {% for _ in range(empty_stars) %}
+                                        &#9734; <!-- Empty star -->
+                                    {% endfor %}
+                                </span>
+                            </p>
+                            <div class="factor-cols">
+                                <div class="factor-col-1">
+                                    <ul class="rating-details">
+                                        <li>Cleanliness:
+                                            <span class="stars">
+                                                {% for _ in range(rating.cleanliness) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.cleanliness) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Facilities:
+                                            <span class="stars">
+                                                {% for _ in range(rating.facilities) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.facilities) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Accessibility:
+                                            <span class="stars">
+                                                {% for _ in range(rating.accessibility) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.accessibility) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Natural Diversity:
+                                            <span class="stars">
+                                                {% for _ in range(rating.natural_diversity) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.natural_diversity) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Eco-friendly Practices:
+                                            <span class="stars">
+                                                {% for _ in range(rating.eco_friendly_practices) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.eco_friendly_practices) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="factor-col-2">
+                                    <ul class="rating-details">
+                                        <li>Safety & Security:
+                                            <span class="stars">
+                                                {% for _ in range(rating.safety_security) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.safety_security) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Recreational Opportunities:
+                                            <span class="stars">
+                                                {% for _ in range(rating.recreational_opportunities) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.recreational_opportunities) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Community Engagement:
+                                            <span class="stars">
+                                                {% for _ in range(rating.community_engagement) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.community_engagement) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Educational Value:
+                                            <span class="stars">
+                                                {% for _ in range(rating.educational_value) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.educational_value) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                        <li>Scenic Beauty:
+                                            <span class="stars">
+                                                {% for _ in range(rating.scenic_beauty) %}
+                                                    &#9733; <!-- Filled star -->
+                                                {% endfor %}
+                                                {% for _ in range(5 - rating.scenic_beauty) %}
+                                                    &#9734; <!-- Empty star -->
+                                                {% endfor %}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <hr>
+                            <p>{{ rating.text }}</p>
+                        </div>
                     </div>
                 {% endfor %}
             {% else %}

@@ -28,6 +28,11 @@ h1 {
     color: #3a5a2c;
 }
 
+hr {
+    border: 0;
+    border-top: solid 1px #bbbbbb;
+}
+
 .profile_pic img {
     height: 200px;
     width: 200px;
@@ -180,9 +185,61 @@ nav a, .login-btn {
     color: #ffab00;
 }
 
-.factor-cols {
+.space-details-ratings .rating-block {
+    background-color: #d6ead6;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 15px;
+}
+
+.space-details-ratings .rating-header {
+    background-color: #bcddbc;
     display: flex;
-    align-items: flex-start;
+    justify-content: space-between;
+    padding: 0 10px;
+    border-radius: 8px 8px 0 0;
+    align-items: center;
+    font-weight: bold;
+}
+
+.space-details-ratings .rating-content {
+    padding: 10px;
+}
+
+.rating-details {
+    list-style: none;
+    padding: 0;
+}
+
+.rating-details li {
+    display: flex;
+    align-items: center;
+}
+
+.rating-details span.stars {
+    margin-left: 5px; /* Space between label and stars */
+}
+
+.space-details-info {
+    margin-bottom: 20px;
+}
+
+.space-details {
+    background-color: #fdfefd;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,.2);
+}
+
+.space-details-actions {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.factor-cols {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
 }
 
 .factor-col-1 {
@@ -192,6 +249,10 @@ nav a, .login-btn {
 
 .factor-col-2 {
     flex: 2;
+}
+
+.add-rating {
+    margin-top: 30px;
 }
 
 .rating-form {
@@ -334,7 +395,7 @@ table th, table td {
     z-index: 1000;
 }
 
-/* Space Details Additions */
+/* Space Details Carousel Additions */
 .space-details-carousel {
     max-width: 600px;
     height: 400px;
@@ -358,18 +419,6 @@ table th, table td {
     width: auto;
 }
 
-.space-details {
-    background-color: #fdfefd;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,.2);
-}
-
-.space-details-actions {
-    text-align: right;
-    margin-bottom: 20px;
-}
-
 .space-details-carousel-container {
     margin-bottom: 20px;
 }
@@ -377,30 +426,6 @@ table th, table td {
 .space-details-carousel {
     max-width: 600px;
     margin: auto;
-}
-
-.space-details-info {
-    margin-bottom: 20px;
-}
-
-.space-details-ratings .rating-block {
-    background-color: #e7f1e3;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-}
-
-.space-details-ratings .rating-header {
-    font-weight: bold;
-}
-
-.space-details-ratings .rating-details {
-    list-style: none;
-    padding: 0;
-}
-
-.add-rating {
-    margin-top: 30px;
 }
 
 /* Responsive styles */
