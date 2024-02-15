@@ -222,6 +222,11 @@ def delete_space(space_id):
         return redirect(url_for('index'))
 
     try:
+        # Delete associated ratings
+        ratings = Rating.query.filter_by(space_id=space_id).all()
+        for rating in ratings:
+            db.session.delete(rating)
+
         # Delete associated files (photos)
         if space.photos:
             for photo in space.photos.split(','):
@@ -233,12 +238,13 @@ def delete_space(space_id):
             if os.path.exists(folder_path) and not os.listdir(folder_path):
                 os.rmdir(folder_path)
 
+        # Finally, delete the space
         db.session.delete(space)
         db.session.commit()
-        flash('Space deleted successfully.', 'success')
+        flash('Space and associated ratings deleted successfully.', 'success')
     except Exception as e:
-        flash('Error occurred while deleting space.', 'error')
-        app.logger.error(f"Error deleting space: {e}")
+        flash('Error occurred while deleting space and associated ratings.', 'error')
+        app.logger.error(f"Error deleting space and ratings: {e}")
 
     return redirect(url_for('index'))
 
