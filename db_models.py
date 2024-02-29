@@ -44,7 +44,7 @@ class Rating(db.Model):
     space_id = db.Column(db.Integer, db.ForeignKey('space.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user_name = db.Column(db.Integer, db.ForeignKey('user.username'), nullable=False)
-    text = db.Column(db.String(300))
+    text = db.Column(db.String(1500))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Community(db.Model):

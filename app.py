@@ -240,6 +240,18 @@ def delete_space(space_id):
         return redirect(url_for('index'))
 
     try:
+        # Find associated Community
+        community = Community.query.filter_by(space_id=space_id).first()
+        if community:
+            # Delete associated CommunityPosts
+            CommunityPost.query.filter_by(community_id=community.id).delete()
+
+            # Delete associated Memberships
+            Membership.query.filter_by(community_id=community.id).delete()
+
+            # Delete the Community itself
+            db.session.delete(community)
+
         # Delete associated ratings
         ratings = Rating.query.filter_by(space_id=space_id).all()
         for rating in ratings:
@@ -259,7 +271,7 @@ def delete_space(space_id):
         # Finally, delete the space
         db.session.delete(space)
         db.session.commit()
-        flash('Space and associated ratings deleted successfully.', 'success')
+        flash('Space and associated community and ratings deleted successfully.', 'success')
     except Exception as e:
         flash('Error occurred while deleting space and associated ratings.', 'error')
         app.logger.error(f"Error deleting space and ratings: {e}")
@@ -338,14 +350,15 @@ def community_page(space_id):
     is_member = any(m.user_id == current_user.id for m in memberships)
     return render_template('community_page.html', community=community, posts=posts, members=members, is_member=is_member)
 
-# SIGN UP FOR SPACE COMMUNITY
+# JOIN SPACE COMMUNITY
 @app.route('/join_community/<int:community_id>', methods=['POST'])
 @login_required
 def join_community(community_id):
     # Check if the user is already a member of the community
     existing_membership = Membership.query.filter_by(user_id=current_user.id, community_id=community_id).first()
     if existing_membership:
-        return jsonify({'message': 'You are already a member of this community'}), 400
+        flash('You are already a member of this community', 'info')
+        return redirect(url_for('community_page', space_id=community_id))
 
     # Create a new membership
     new_membership = Membership(
@@ -356,11 +369,13 @@ def join_community(community_id):
     db.session.add(new_membership)
     try:
         db.session.commit()
-        return jsonify({'message': 'You have successfully joined the community'}), 200
+        flash('You have successfully joined the community', 'success')
     except Exception as e:
         db.session.rollback()
+        flash('An error occurred while joining the community', 'error')
         print(e)
-        return jsonify({'message': 'An error occurred while joining the community'}), 500
+
+    return redirect(url_for('community_page', space_id=community_id))
     
 # LEAVE SPACE COMMUNITY
 @app.route('/leave_community/<int:community_id>', methods=['POST'])
@@ -369,16 +384,19 @@ def leave_community(community_id):
     # Find the membership to delete
     membership_to_delete = Membership.query.filter_by(user_id=current_user.id, community_id=community_id).first()
     if not membership_to_delete:
-        return jsonify({'message': 'You are not a member of this community'}), 400
+        flash('You are not a member of this community', 'info')
+        return redirect(url_for('community_page', space_id=community_id))
 
     db.session.delete(membership_to_delete)
     try:
         db.session.commit()
-        return jsonify({'message': 'You have successfully left the community'}), 200
+        flash('You have successfully left the community', 'success')
     except Exception as e:
         db.session.rollback()
-        print(e) 
-        return jsonify({'message': 'An error occurred while leaving the community'}), 500
+        flash('An error occurred while leaving the community', 'error')
+        print(e)
+
+    return redirect(url_for('community_page', space_id=community_id))
 
 # POST TO COMMUNITY PAGE
 @app.route('/add_post_to_community/<int:community_id>', methods=['POST'])

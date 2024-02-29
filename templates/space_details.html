@@ -256,7 +256,7 @@
                         </div>
                     </fieldset>
                     {{ ratingform.text.label }}
-                     <textarea {{ ratingform.text }}>Your comment here...</textarea>
+                     <textarea {{ ratingform.text }} ></textarea>
                     <br>
                     <button type="submit" class="btn">{{ ratingform.submit.label }}</button>
                 </form>
@@ -265,12 +265,12 @@
 
     <script>
         document.querySelectorAll('.star-rating').forEach((ratingDiv) => {
-            let inputField = ratingDiv.nextElementSibling; // This is your integer field
+            let inputField = ratingDiv.nextElementSibling;
             for (let i = 0; i < 5; i++) {
                 let star = document.createElement('span');
                 star.innerHTML = '&#9734;'; // Empty star
                 star.onclick = () => {
-                    inputField.value = 5 - i; // Set the value of the integer field
+                    inputField.value = 5 - i;
                     updateStars(ratingDiv, i);
                 };
                 ratingDiv.appendChild(star);
