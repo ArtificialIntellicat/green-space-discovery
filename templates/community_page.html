@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>{{ community.name }}</title>
+<style>
+    .reply-form {
+        display: none;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<h1>{{ community.name }}
+    {% if is_member %}
+        <form action="{{ url_for('leave_community', community_id=community.id) }}" method="POST" class="leave-community">
+            <button type="submit" class="btn btn-danger">Leave Community</button>
+        </form>
+    {% endif %}
+</h1>
+<p>{{ community.description }}</p>
+
+<div class="community-container">
+    <div class="members-list">
+        <h2>Members</h2>
+        <ul>
+            {% for member in members %}
+                <li>
+                    <img src="{{ url_for('static', filename='uploads/user_profile_pics/' ~ member.profile_pic) }}" alt="Profile Picture">
+                    {{ member.username }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="posts-container">
+        {% if is_member %}
+            <div class="post-form">
+                <h2>Post something...</h2>
+                <form action="{{ url_for('add_post_to_community', community_id=community.id) }}" method="POST">
+                    <textarea name="text" placeholder="Share your thoughts..." style="width: 90%"></textarea>
+                    <br>
+                    <button type="submit" class="btn">Post</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="membership-message">
+                <p>You have to be a member of this community to post here.</p>
+                <form action="{{ url_for('join_community', community_id=community.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary">Become a Member</button>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="posts">
+            <h2>Community Posts</h2>
+            {% for post in posts %}
+                <div class="post" id="post-{{ post.id }}">
+                    <p>{{ post.date_created.strftime('%Y-%m-%d %H:%M') }}</p>
+                    {% if post.reply_to_id %}
+                        <p><strong>Reply to: {{ post.reply_to.user.username }}</strong></p>
+                    {% endif %}
+                    <p>{{ post.user.username }} says:</p>
+                    <p>{{ post.text }}</p>
+                    <a href="javascript:void(0)" onclick="showReplyForm({{ post.id }})">Reply</a>
+                    <div class="reply-form" id="reply-form-{{ post.id }}">
+                        <form action="{{ url_for('add_post_to_community', community_id=community.id) }}" method="POST">
+                            <textarea name="text" placeholder="Your reply..." style="width: 90%"></textarea>
+                            <input type="hidden" name="reply_to_id" value="{{ post.id }}">
+                            <br>
+                            <button type="submit" class="btn btn-primary">Submit Reply</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+function showReplyForm(postId) {
+    var formId = "reply-form-" + postId;
+    var form = document.getElementById(formId);
+    if (form.style.display === "none" || !form.style.display) {
+        form.style.display = "block";
+    } else {
+        form.style.display = "none";
+    }
+}
+</script>
+{% endblock %}

@@ -46,3 +46,34 @@ class Rating(db.Model):
     user_name = db.Column(db.Integer, db.ForeignKey('user.username'), nullable=False)
     text = db.Column(db.String(300))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Community(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(300))
+    space_id = db.Column(db.Integer, db.ForeignKey('space.id'), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    # Relationship to Space model (assuming one-to-many)
+    space = db.relationship('Space', backref=db.backref('community', uselist=False, lazy=True))
+
+class CommunityPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'), nullable=False)
+    text = db.Column(db.String(1000))
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+    reply_to_id = db.Column(db.Integer, db.ForeignKey('community_post.id'), nullable=True)
+    community = db.relationship('Community', backref=db.backref('posts', lazy=True))
+    user = db.relationship('User', backref=db.backref('posts', lazy=True))
+    replies = db.relationship('CommunityPost', backref=db.backref('reply_to', remote_side=[id]), lazy=True)
+
+class Membership(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'), nullable=False)
+    date_joined = db.Column(db.DateTime, default=datetime.utcnow)
+    role = db.Column(db.String(50))  # e.g., 'member', 'moderator'
+    community = db.relationship('Community', backref=db.backref('memberships', lazy=True))
+    user = db.relationship('User', backref=db.backref('memberships', lazy=True))
+
+

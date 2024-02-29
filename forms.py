@@ -20,7 +20,7 @@ class RegistrationForm(FlaskForm):
         label=('Confirm Password'), widget=PasswordInput(hide_value=False),
         validators=[DataRequired(message='*Required'),
                     EqualTo('password', message='Both password fields must be equal!')])
-    profile_pic = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png'], 'Only jpg and png can be uploaded.')])
+    profile_pic = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Only jpg, jpeg and png can be uploaded.')])
     submit = SubmitField('Sign Up')
 
 class LoginForm(FlaskForm):
@@ -40,7 +40,7 @@ class AddSpaceForm(FlaskForm):
     address = StringField('Address', validators=[Optional(), Length(max=120)])
     description = StringField('Description', validators=[Optional(), Length(min=2, max=300)])
     photos = MultipleFileField('Photos',
-                            validators=[FileAllowed(['jpg', 'png'], 'Only jpg and png can be uploaded.')])
+                            validators=[FileAllowed(['jpg', 'jpeg', 'png'], 'Only jpg, jpeg and png can be uploaded.')])
     submit = SubmitField('Add Space')
 
 class RatingForm(FlaskForm):

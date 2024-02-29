@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash, url_for
+from flask import Flask, render_template, request, redirect, flash, url_for,jsonify
 from urllib.parse import urlparse, urljoin
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 import os
@@ -8,7 +8,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import RegistrationForm, LoginForm, ChangeLoginForm, AddSpaceForm, RatingForm
-from db_models import User, Space, db, Rating
+from db_models import db, User, Space, Rating, Community, CommunityPost, Membership
 from config import Config
 
 # App and Database Setup
@@ -30,9 +30,11 @@ def inject_login_form():
     form = LoginForm()
     return dict(form=form)
 
-# INDEX
-from sqlalchemy.sql import func
+@app.shell_context_processor
+def make_shell_context():
+    return {'db': db, 'Community': Community, 'Space': Space, 'User': User}
 
+# INDEX
 @app.route('/', methods=['GET', 'POST'])
 def index():
     spaces = Space.query.order_by(Space.date_created.desc()).all()
@@ -83,7 +85,7 @@ def logout():
 
 # USER ACTIONS
 @app.route('/user_profile')
-@login_required  # This decorator ensures that the route is accessible only when the user is logged in
+@login_required
 def user_profile():
     return render_template('user.html', user=current_user)
 
@@ -128,8 +130,7 @@ def change_login_data():
         else:
             flash('No changes were made.', 'info')
     else:
-        print("Form errors:", form.errors)  # Print detailed form errors
-
+        print("Form errors:", form.errors) 
     return render_template('change_login_data.html', form=form, user=current_user)
 
 
@@ -206,10 +207,27 @@ def add_space():
 
         try:
             db.session.add(new_space)
+            db.session.flush()  # Ensure new_space gets an ID before committing
+
+            # Create associated community for this space
+            community_name = f"Community for {form.name.data}"
+            new_community = Community(
+                name=community_name,
+                description=f"A dedicated community for {form.name.data} enthusiasts.",
+                space_id=new_space.id
+            )
+            db.session.add(new_community)
+
             db.session.commit()
+            
+            # Redirect or give feedback to the user
             return redirect('/')
-        except:
+        except Exception as e:
+            # Rollback in case of error
+            db.session.rollback()
+            print(e) 
             return 'There was an issue adding the space.'
+
     return render_template('add_space.html', form=form)
 
 # DELETE SPACE
@@ -308,6 +326,97 @@ def delete_rating(rating_id):
         app.logger.error(f"Error deleting space: {e}")
 
     return redirect(url_for('index'))
+
+# LINK TO COMMUNITY PAGE
+@app.route('/community_page/<int:space_id>', methods=['GET', 'POST'])
+@login_required
+def community_page(space_id):
+    community = Community.query.filter_by(space_id=space_id).first_or_404()
+    posts = CommunityPost.query.filter_by(community_id=community.id).all()
+    memberships = Membership.query.filter_by(community_id=community.id).all()
+    members = [membership.user for membership in memberships]
+    is_member = any(m.user_id == current_user.id for m in memberships)
+    return render_template('community_page.html', community=community, posts=posts, members=members, is_member=is_member)
+
+# SIGN UP FOR SPACE COMMUNITY
+@app.route('/join_community/<int:community_id>', methods=['POST'])
+@login_required
+def join_community(community_id):
+    # Check if the user is already a member of the community
+    existing_membership = Membership.query.filter_by(user_id=current_user.id, community_id=community_id).first()
+    if existing_membership:
+        return jsonify({'message': 'You are already a member of this community'}), 400
+
+    # Create a new membership
+    new_membership = Membership(
+        user_id=current_user.id,
+        community_id=community_id,
+        role='member'  # Default role
+    )
+    db.session.add(new_membership)
+    try:
+        db.session.commit()
+        return jsonify({'message': 'You have successfully joined the community'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        return jsonify({'message': 'An error occurred while joining the community'}), 500
+    
+# LEAVE SPACE COMMUNITY
+@app.route('/leave_community/<int:community_id>', methods=['POST'])
+@login_required
+def leave_community(community_id):
+    # Find the membership to delete
+    membership_to_delete = Membership.query.filter_by(user_id=current_user.id, community_id=community_id).first()
+    if not membership_to_delete:
+        return jsonify({'message': 'You are not a member of this community'}), 400
+
+    db.session.delete(membership_to_delete)
+    try:
+        db.session.commit()
+        return jsonify({'message': 'You have successfully left the community'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(e) 
+        return jsonify({'message': 'An error occurred while leaving the community'}), 500
+
+# POST TO COMMUNITY PAGE
+@app.route('/add_post_to_community/<int:community_id>', methods=['POST'])
+@login_required
+def add_post_to_community(community_id):
+    # Check if the user is a member of the community
+    membership = Membership.query.filter_by(user_id=current_user.id, community_id=community_id).first()
+    if not membership:
+        flash('You must be a member of the community to post', 'error')
+        return redirect(url_for('community_page', space_id=community_id))
+
+    text = request.form.get('text')
+    reply_to_id = request.form.get('reply_to_id', None)
+
+    # Validate post content
+    if not text:
+        flash('Post text is required', 'error')
+        return redirect(url_for('community_page', space_id=community_id))
+
+    # Create new post
+    new_post = CommunityPost(
+        user_id=current_user.id,
+        community_id=community_id,
+        text=text,
+        reply_to_id=reply_to_id if reply_to_id is not None else None
+    )
+
+    db.session.add(new_post)
+    try:
+        db.session.commit()
+        flash('Post added successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('An error occurred while adding the post', 'error')
+        print(e)
+
+    return redirect(url_for('community_page', space_id=community_id))
+
 
 if __name__ == '__main__':
     create_database(app)

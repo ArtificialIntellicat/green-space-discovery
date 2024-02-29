@@ -5,15 +5,15 @@
 {% endblock %}
 
 {% block body %}
-        <h1>{{ space.name }}</h1>
-
-        <div class="space-details-actions">
+        <h1>{{ space.name }}
             {% if current_user.is_authenticated and current_user.id == space.user_id %}
-                <form action="{{ url_for('delete_space', space_id=space.id) }}" method="POST">
+                <form action="{{ url_for('delete_space', space_id=space.id) }}" method="POST" class="space-details-actions">
                     <input type="submit" value="Delete" class="btn btn-danger">
                 </form>
             {% endif %}
-        </div>
+        </h1>
+
+        <a href="{{ url_for('community_page', space_id=space.id) }}" class="btn btn-info">Visit Community</a>
 
         <div class="space-details-carousel-container">
             {% if space.photos %}
