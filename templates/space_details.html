@@ -20,10 +20,20 @@
                 <div class="space-details-carousel">
                     {% for photo in space.photos.split(',') %}
                         <img src="{{ url_for('static', filename=photo) }}" alt="Photo of {{ space.name }}">
+                        <form action="{{ url_for('delete_photo', space_id=space.id, photo_name=photo.split('/')[-1]) }}" method="POST" class="delete-photo-form">
+                            <button type="submit" class="btn btn-danger delete-photo-btn">Delete Photo</button>
+                        </form>
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
+
+        {% if current_user.is_authenticated %}
+        <form action="{{ url_for('upload_photo', space_id=space.id) }}" method="POST" enctype="multipart/form-data" class="upload-photo-form">
+            <input type="file" name="photo" required>
+            <input type="submit" value="Upload Photos" class="btn btn-primary">
+        </form>
+        {% endif %}
 
         <div class="space-details-info">
             <h2>Details</h2>

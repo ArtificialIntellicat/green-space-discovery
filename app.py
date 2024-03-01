@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, flash, url_for,jsonify
+from flask import Flask, render_template, request, redirect, flash, url_for, current_app
 from urllib.parse import urlparse, urljoin
 from flask_login import LoginManager, login_user, current_user, logout_user, login_required
 import os
@@ -171,6 +171,43 @@ def registration():
                 flash(f"{fieldName}: {err}", 'error')
     return render_template('registration.html', form=form)
 
+# SPACE PHOTO UPLOAD
+def handle_photo_uploads(space, files, timestamp=None):
+    base_folder_name = secure_filename(space.name.replace(" ", "_")).lower()
+    if timestamp:
+        space_folder_name = f"{base_folder_name}_{timestamp}"
+    else:
+        # Attempt to find an existing folder that starts with the base folder name
+        space_folder_name = None
+        for folder in os.listdir(os.path.join(app.config['UPLOAD_FOLDER'], 'spaces')):
+            if folder.startswith(base_folder_name):
+                space_folder_name = folder
+                break
+        # If no existing folder is found, create a new one with the current timestamp
+        if not space_folder_name:
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            space_folder_name = f"{base_folder_name}_{timestamp}"
+    space_folder_path = os.path.join(app.config['UPLOAD_FOLDER'], 'spaces', space_folder_name)
+    os.makedirs(space_folder_path, exist_ok=True)
+    
+    web_paths = []
+    for file in files:
+        if file and allowed_file(file.filename):
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            photo_timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            filename = f"{base_folder_name}_{photo_timestamp}.{ext}"
+            file_path = os.path.join(space_folder_path, filename)
+            file.save(file_path)
+            web_path = os.path.join('uploads', 'spaces', space_folder_name, filename)
+            web_paths.append(web_path)
+    
+    # Update the database
+    if space.photos:
+        space.photos += ',' + ','.join(web_paths)
+    else:
+        space.photos = ','.join(web_paths)
+    db.session.commit()
+
 # ADD SPACE
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
@@ -180,35 +217,22 @@ def allowed_file(filename):
 def add_space():
     form = AddSpaceForm()
     if form.validate_on_submit():
-        base_folder_name = secure_filename(form.name.data.replace(" ", "_")).lower()
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        space_folder_name = f"{base_folder_name}_{timestamp}"
-        space_folder_path = os.path.join(app.config['UPLOAD_FOLDER'], 'spaces', space_folder_name)
-        os.makedirs(space_folder_path, exist_ok=True)
-
-        filenames = []
-        for file in request.files.getlist('photos'):
-            if file and allowed_file(file.filename):
-                ext = file.filename.rsplit('.', 1)[1].lower()
-                photo_timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
-                filename = f"{base_folder_name}_{photo_timestamp}.{ext}"
-                file.save(os.path.join(space_folder_path, filename))
-                web_path = f"uploads/spaces/{space_folder_name}/{filename}"
-                filenames.append(web_path)
-
         new_space = Space(
             name=form.name.data,
             address=form.address.data,
             description=form.description.data,
-            photos=','.join(filenames),
+            photos='',  # Initialize with an empty string; will be updated by handle_photo_uploads
             user_id=current_user.id,
             user_name=current_user.username
         )
+        db.session.add(new_space)
+        db.session.flush()  # Ensure new_space gets an ID before committing
+
+        # Handle photo uploads
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        handle_photo_uploads(new_space, request.files.getlist('photos'), timestamp)
 
         try:
-            db.session.add(new_space)
-            db.session.flush()  # Ensure new_space gets an ID before committing
-
             # Create associated community for this space
             community_name = f"Community for {form.name.data}"
             new_community = Community(
@@ -217,13 +241,9 @@ def add_space():
                 space_id=new_space.id
             )
             db.session.add(new_community)
-
             db.session.commit()
-            
-            # Redirect or give feedback to the user
             return redirect('/')
         except Exception as e:
-            # Rollback in case of error
             db.session.rollback()
             print(e) 
             return 'There was an issue adding the space.'
@@ -338,6 +358,47 @@ def delete_rating(rating_id):
         app.logger.error(f"Error deleting space: {e}")
 
     return redirect(url_for('index'))
+
+# UPLOAD PHOTOS TO EXISTING SPACE
+@app.route('/upload_photo/<int:space_id>', methods=['POST'])
+@login_required
+def upload_photo(space_id):
+    space = Space.query.get_or_404(space_id)
+    if 'photo' not in request.files:
+        flash('No photo part', 'error')
+        return redirect(url_for('space_details', space_id=space_id))
+    
+    photo = request.files['photo']
+    if photo.filename == '' or not allowed_file(photo.filename):
+        flash('Invalid file type.', 'error')
+        return redirect(url_for('space_details', space_id=space_id))
+    
+    handle_photo_uploads(space, [photo])
+
+    flash('Photo uploaded successfully!', 'success')
+    return redirect(url_for('space_details', space_id=space_id))
+
+# DELETE SPACE PHOTOS
+@app.route('/delete_photo/<int:space_id>/<photo_name>', methods=['POST'])
+@login_required
+def delete_photo(space_id, photo_name):
+    space = Space.query.get_or_404(space_id)
+    photo_path = None
+    # Find the photo's path
+    for photo in space.photos.split(','):
+        if photo_name in photo:
+            photo_path = os.path.join(app.static_folder, photo)
+            break
+    if photo_path and os.path.exists(photo_path):
+        os.remove(photo_path)
+        # Update the space.photos field
+        updated_photos = [photo for photo in space.photos.split(',') if photo_name not in photo]
+        space.photos = ','.join(updated_photos)
+        db.session.commit()
+        flash('Photo deleted successfully.', 'success')
+    else:
+        flash('Photo not found.', 'error')
+    return redirect(url_for('space_details', space_id=space_id))
 
 # LINK TO COMMUNITY PAGE
 @app.route('/community_page/<int:space_id>', methods=['GET', 'POST'])
