@@ -198,7 +198,8 @@ def handle_photo_uploads(space, files, timestamp=None):
             filename = f"{base_folder_name}_{photo_timestamp}.{ext}"
             file_path = os.path.join(space_folder_path, filename)
             file.save(file_path)
-            web_path = os.path.join('uploads', 'spaces', space_folder_name, filename)
+            # Ensure the web path uses forward slashes for compatibility with web URLs
+            web_path = os.path.join('uploads', 'spaces', space_folder_name, filename).replace('\\', '/')
             web_paths.append(web_path)
     
     # Update the database
