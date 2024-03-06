@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block head %}
-    <title>Add a Green Space</title>
+    <title>Grünanlage hinzufügen</title>
 {% endblock %}
 
 {% block body %}
-    <h1>Add a Green Space</h1>
+    <h1>Grünanlage hinzufügen</h1>
 
     <form action="/add_space" method="POST" enctype="multipart/form-data">
         {{ form.csrf_token() }}

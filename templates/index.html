@@ -10,12 +10,10 @@
     <table>
         <tr>
             <th>Name</th>
-            <th>Photos</th>
-            <th>Address</th>
-            <th>Description</th>
-            <th>Ratings</th>
-            <th>Created By</th>
-            <th>Date Created</th>
+            <th>Fotos</th>
+            <th>Addresse</th>
+            <th>Beschreibung</th>
+            <th>Bewertung</th>
         </tr>
         {% for space in spaces %}
         <tr>
@@ -25,17 +23,37 @@
                 {% if space.photos %}
                     <div class="space-carousel">
                         {% for photo in space.photos.split(',') %}
-                            <img src="{{ url_for('static', filename=photo) }}" alt="Photo of {{ space.name }}">
+                            <img src="{{ url_for('static', filename=photo) }}" alt="Foto von {{ space.name }}">
                         {% endfor %}
                     </div>
                 {% endif %}
             </td>
             <td>{{ space.address }}</td>
             <td>{{ space.description }}</td>
-            <td>
-            </td>
-            <td>{{ space.user_name }}</td>
-            <td>{{ space.date_created.date() }}</td>
+            <td style="width: 10%;">
+                {% if ratings[space.id] %}
+                    {% for rating in ratings[space.id] %}
+                        <span class="stars">
+                            {% set total_rating = (rating.cleanliness + rating.facilities + rating.accessibility + rating.natural_diversity + rating.eco_friendly_practices + rating.safety_security + rating.recreational_opportunities + rating.community_engagement + rating.educational_value + rating.scenic_beauty) / 10 %}
+                            {% set full_stars = total_rating | int %}
+                            {% set half_star = (total_rating - full_stars) >= 0.5 %}
+                            {% set empty_stars = 5 - full_stars - half_star %}
+
+                            {% for _ in range(full_stars) %}
+                                &#9733; <!-- Filled star -->
+                            {% endfor %}
+                            {% if half_star %}
+                                &frac12; <!-- Half star -->
+                            {% endif %}
+                            {% for _ in range(empty_stars) %}
+                                &#9734; <!-- Empty star -->
+                            {% endfor %}
+                        </span>
+                    {% endfor %}
+                {% else %}
+                    Noch keine Bewertungen vorhanden.
+                {% endif %}
+            </td>                                           
         </tr>
         {% endfor %}
     </table>

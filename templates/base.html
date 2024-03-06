@@ -18,14 +18,14 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('add_space') }}">Add Space</a></li>
+                <li><a href="{{ url_for('add_space') }}">Grünanlage hinzufügen</a></li>
                 {% if not current_user.is_authenticated %}
-                    <li><a href="{{ url_for('registration') }}">Register</a></li>
+                    <li><a href="{{ url_for('registration') }}">Registrieren</a></li>
                 {% endif %}
             </ul>
             <ul>
                 {% if current_user.is_authenticated %}
-                    <li><a href="{{ url_for('user_profile') }}">Profile</a></li>
+                    <li><a href="{{ url_for('user_profile') }}">Profil</a></li>
                     <li><a href="{{ url_for('logout') }}">Logout</a></li>
                 {% else %}
                     <li class="login-form">

@@ -2,100 +2,35 @@
 
 {% block head %}
     <title>{{ space.name }}</title>
-    <style>
-        /* Gallery Styles */
-       .photo-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            grid-auto-rows: 150px;
-        }
-        .photo-grid-item {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            border-radius: 10px; /* Ensure the items have rounded corners if desired */
-        }
-        .photo-grid-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px; /* Match the border-radius of the container for a seamless look */
-        }
-        .delete-photo-form {
-            position: absolute;
-            top: 5px; /* Adjusted to align the button to the top */
-            right: 5px; /* Adjusted to align the button to the right */
-            z-index: 10; /* Ensure the form/button is above the image */
-        }
-        .delete-photo-btn {
-            padding: 0.3em 0.5em; /* Smaller padding for a neater appearance */
-            font-size: 0.75rem; /* Smaller font size for the button */
-            line-height: 1; /* Adjust line height to tighten the button's height */
-            border-radius: 5px; /* Slightly rounded corners for the button */
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .pagination button {
-            margin: 0 5px;
-        }
-
-        /* Lightbox styles */
-        .lightbox {
-            display: none;
-            position: fixed;
-            z-index: 100;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            align-items: center;
-            justify-content: center;
-        }
-        .lightbox img {
-            max-width: 80%;
-            max-height: 80%;
-            border-radius: 10px;
-        }
-        .lightbox-content {
-        position: relative;
-        display: inline-block; /* This will contain the image and make positioning the button easier */
-        }
-        .lightbox-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            font-size: 16px;
-            z-index: 20; /* Ensure it's above the image */
-        }
-    </style>
 {% endblock %}
 
 {% block body %}
         <h1>{{ space.name }}
-            {% if current_user.is_authenticated and current_user.id == space.user_id %}
-                <form action="{{ url_for('delete_space', space_id=space.id) }}" method="POST" class="space-details-actions">
-                    <input type="submit" value="Delete" class="btn btn-danger">
-                </form>
-            {% endif %}
+            <div style="float:right;">
+                {% if current_user.is_authenticated and current_user.id == space.user_id %}
+                    <form action="{{ url_for('delete_space', space_id=space.id) }}" method="POST"  style="float:right; margin-left: 15px;">
+                        <input type="submit" value="Löschen" class="btn btn-danger">
+                    </form>
+                {% endif %}
+                <a href="{{ url_for('community_page', space_id=space.id) }}" class="btn">Community besuchen</a>
+            </div>
         </h1>
 
-        <a href="{{ url_for('community_page', space_id=space.id) }}" class="btn btn-info">Visit Community</a>
+        {% if current_user.is_authenticated %}
+        <form action="{{ url_for('upload_photo', space_id=space.id) }}" method="POST" enctype="multipart/form-data" class="upload-photo-form">
+            <input type="file" name="photo" required>
+            <input type="submit" value="Fotos hochladen" class="btn btn-primary">
+        </form>
+        {% endif %}
 
         <div class="photo-grid-container" id="photoGrid">
             {% if space.photos %}
                 {% for photo in space.photos.split(',') %}
                     <div class="photo-grid-item">
-                        <img src="{{ url_for('static', filename=photo) }}" alt="Photo of {{ space.name }}">
+                        <img src="{{ url_for('static', filename=photo) }}" alt="Foto von {{ space.name }}">
                         {% if current_user.is_authenticated %}
                             <form action="{{ url_for('delete_photo', space_id=space.id, photo_name=photo.split('/')[-1]) }}" method="POST" class="delete-photo-form">
-                                <button type="submit" class="btn btn-danger delete-photo-btn">Delete</button>
+                                <button type="submit" class="btn btn-danger delete-photo-btn">Löschen</button>
                             </form>
                         {% endif %}
                     </div>
@@ -103,42 +38,33 @@
             {% endif %}
         </div>
         <div class="pagination">
-            <button onclick="paginate(-1)" class="btn">&#10094; Prev</button>
-            <button onclick="paginate(1)" class="btn">Next &#10095;</button>
+            <button onclick="paginate(-1)" class="btn">&#10094; Zurück</button>
+            <button onclick="paginate(1)" class="btn">Vor &#10095;</button>
         </div>
-
-        {% if current_user.is_authenticated %}
-        <form action="{{ url_for('upload_photo', space_id=space.id) }}" method="POST" enctype="multipart/form-data" class="upload-photo-form">
-            <input type="file" name="photo" required>
-            <input type="submit" value="Upload Photos" class="btn btn-primary">
-        </form>
-        {% endif %}
 
         <div class="space-details-info">
             <h2>Details</h2>
-            <p><strong>Address:</strong> {{ space.address }}</p>
-            <p><strong>Description:</strong> {{ space.description }}</p>
-            <p><strong>Created By:</strong> {{ space.user_name }}</p>
-            <p><strong>Date Created:</strong> {{ space.date_created.strftime('%Y-%m-%d') }}</p>
+            <p><strong>Addresse:</strong> {{ space.address }}</p>
+            <p><strong>Beschreibung:</strong> {{ space.description }}</p>
         </div>
 
         <div class="space-details-ratings">
-            <h2>Ratings</h2>
+            <h2>Bewertungen</h2>
             {% if ratings %}
                 {% for rating in ratings %}
                     <div class="rating-block">
                         <div class="rating-header">
-                            <div><strong>Rating by:</strong> {{ rating.user_name }} | <strong>Date:</strong> {{ rating.date_created.strftime('%Y-%m-%d') }}</div>
+                            <div><strong>{{ rating.user_name }}</strong> | <strong>{{ rating.date_created.strftime('%Y-%m-%d') }}</strong></div>
                             <div>
                                 {% if current_user.is_authenticated and current_user.id == rating.user_id %}
                                     <form action="{{ url_for('delete_rating', rating_id=rating.id) }}" method="post">
-                                        <input type="submit" value="Delete Rating" class="btn btn-danger">
+                                        <input type="submit" value="Bewertung löschen" class="btn btn-danger">
                                     </form>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="rating-content">
-                            <p><strong>Overall Average Rating:</strong>
+                            <p><strong>Gesamtbewertung:</strong>
                                 <span class="stars">
                                     {% set total_rating = (rating.cleanliness + rating.facilities + rating.accessibility + rating.natural_diversity + rating.eco_friendly_practices + rating.safety_security + rating.recreational_opportunities + rating.community_engagement + rating.educational_value + rating.scenic_beauty) / 10 %}
                                     {% set full_stars = total_rating | int %}
@@ -159,53 +85,53 @@
                             <div class="factor-cols">
                                 <div class="factor-col-1">
                                     <ul class="rating-details">
-                                        <li>Cleanliness:
+                                        <li>Sauberkeit:
                                             <span class="stars">
                                                 {% for _ in range(rating.cleanliness) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.cleanliness) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Facilities:
+                                        <li>Ausstattung:
                                             <span class="stars">
                                                 {% for _ in range(rating.facilities) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.facilities) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Accessibility:
+                                        <li>Zugänglichkeit:
                                             <span class="stars">
                                                 {% for _ in range(rating.accessibility) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.accessibility) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Natural Diversity:
+                                        <li>Naturvielfalt:
                                             <span class="stars">
                                                 {% for _ in range(rating.natural_diversity) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.natural_diversity) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Eco-friendly Practices:
+                                        <li>Ökofreundliche Praktiken:
                                             <span class="stars">
                                                 {% for _ in range(rating.eco_friendly_practices) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.eco_friendly_practices) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
@@ -213,53 +139,53 @@
                                 </div>
                                 <div class="factor-col-2">
                                     <ul class="rating-details">
-                                        <li>Safety & Security:
+                                        <li>Sicherheit & Schutz:
                                             <span class="stars">
                                                 {% for _ in range(rating.safety_security) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.safety_security) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Recreational Opportunities:
+                                        <li>Freizeitmöglichkeiten:
                                             <span class="stars">
                                                 {% for _ in range(rating.recreational_opportunities) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.recreational_opportunities) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Community Engagement:
+                                        <li>Gemeinschaftsengagement:
                                             <span class="stars">
                                                 {% for _ in range(rating.community_engagement) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.community_engagement) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Educational Value:
+                                        <li>Bildungswert:
                                             <span class="stars">
                                                 {% for _ in range(rating.educational_value) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.educational_value) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
-                                        <li>Scenic Beauty:
+                                        <li>Landschaftliche Schönheit:
                                             <span class="stars">
                                                 {% for _ in range(rating.scenic_beauty) %}
-                                                    &#9733; <!-- Filled star -->
+                                                    &#9733; <!-- Gefüllter Stern -->
                                                 {% endfor %}
                                                 {% for _ in range(5 - rating.scenic_beauty) %}
-                                                    &#9734; <!-- Empty star -->
+                                                    &#9734; <!-- Leerstern -->
                                                 {% endfor %}
                                             </span>
                                         </li>
@@ -268,89 +194,89 @@
                             </div>
                             <hr>
                             <p>{{ rating.text }}</p>
-                        </div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <p>No ratings available for this space.</p>
-            {% endif %}
-        </div>
+                            </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                                <p>Keine Bewertungen für diesen Raum verfügbar.</p>
+                            {% endif %}
+                            </div>
 
-        <div class="add-rating">
-            <h2>Add Rating</h2>
-            {% if current_user.is_authenticated %}
-                <form action="{{ url_for('add_rating', space_id=space.id) }}" method="POST" class="rating-form">
-                    {{ ratingform.hidden_tag() }}
-                    <fieldset>
-                        <legend>Rate the Space</legend>
-                        <div class="rating-row">
-                            <div class="rating-group">
-                                <label>Cleanliness</label>
-                                <div id="cleanliness-rating" class="star-rating"></div>
-                                {{ ratingform.cleanliness(style='display: none;') }}
+                            <div class="add-rating">
+                                <h2>Bewertung hinzufügen</h2>
+                                {% if current_user.is_authenticated %}
+                                    <form action="{{ url_for('add_rating', space_id=space.id) }}" method="POST" class="rating-form">
+                                        {{ ratingform.hidden_tag() }}
+                                        <fieldset>
+                                            <div class="rating-row">
+                                                <div class="rating-group">
+                                                    <label>Sauberkeit</label>
+                                                    <div id="cleanliness-rating" class="star-rating"></div>
+                                                    {{ ratingform.cleanliness(style='display: none;') }}
+                                                </div>
+                                                <div class="rating-group">
+                                                    <label>Ausstattung</label>
+                                                    <div id="facilities-rating" class="star-rating"></div>
+                                                    {{ ratingform.facilities(style='display: none;') }}
+                                                </div>
+                                            </div>
+                                            <div class="rating-row">
+                                                <div class="rating-group">
+                                                    <label>Zugänglichkeit</label>
+                                                    <div id="accessibility-rating" class="star-rating"></div>
+                                                    {{ ratingform.accessibility(style='display: none;') }}
+                                                </div>
+                                                <div class="rating-group">
+                                                    <label>Natürliche Vielfalt</label>
+                                                    <div id="natural_diversity-rating" class="star-rating"></div>
+                                                    {{ ratingform.natural_diversity(style='display: none;') }}
+                                                </div>
+                                            </div>
+                                            <div class="rating-row">
+                                                <div class="rating-group">
+                                                    <label>Umweltfreundlichkeit</label>
+                                                    <div id="eco_friendly_practices-rating" class="star-rating"></div>
+                                                    {{ ratingform.eco_friendly_practices(style='display: none;') }}
+                                                </div>
+                                                <div class="rating-group">
+                                                    <label>Sicherheit</label>
+                                                    <div id="safety_security-rating" class="star-rating"></div>
+                                                    {{ ratingform.safety_security(style='display: none;') }}
+                                                </div>
+                                            </div>
+                                            <div class="rating-row">
+                                                <div class="rating-group">
+                                                    <label>Freizeitmöglichkeiten</label>
+                                                    <div id="recreational_opportunities-rating" class="star-rating"></div>
+                                                    {{ ratingform.recreational_opportunities(style='display: none;') }}
+                                                </div>
+                                                <div class="rating-group">
+                                                    <label>Gemeinschaftsengagement</label>
+                                                    <div id="community_engagement-rating" class="star-rating"></div>
+                                                    {{ ratingform.community_engagement(style='display: none;') }}
+                                                </div>
+                                            </div>
+                                            <div class="rating-row">
+                                                <div class="rating-group">
+                                                    <label>Bildungswert</label>
+                                                    <div id="educational_value-rating" class="star-rating"></div>
+                                                    {{ ratingform.educational_value(style='display: none;') }}
+                                                </div>
+                                                <div class="rating-group">
+                                                    <label>Landschaftliche Schönheit</label>
+                                                    <div id="scenic_beauty-rating" class="star-rating"></div>
+                                                    {{ ratingform.scenic_beauty(style='display: none;') }}
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                        {{ ratingform.text.label }}
+                                         <textarea {{ ratingform.text }} ></textarea>
+                                        <br>
+                                        <button type="submit" class="btn">{{ ratingform.submit.label }}</button>
+                                    </form>
+                                {% endif %}
                             </div>
-                            <div class="rating-group">
-                                <label>Facilities</label>
-                                <div id="facilities-rating" class="star-rating"></div>
-                                {{ ratingform.facilities(style='display: none;') }}
-                            </div>
-                        </div>
-                        <div class="rating-row">
-                            <div class="rating-group">
-                                <label>Accessibility</label>
-                                <div id="accessibility-rating" class="star-rating"></div>
-                                {{ ratingform.accessibility(style='display: none;') }}
-                            </div>
-                            <div class="rating-group">
-                                <label>Natural Diversity</label>
-                                <div id="natural_diversity-rating" class="star-rating"></div>
-                                {{ ratingform.natural_diversity(style='display: none;') }}
-                            </div>
-                        </div>
-                        <div class="rating-row">
-                            <div class="rating-group">
-                                <label>Eco-friendly Practices</label>
-                                <div id="eco_friendly_practices-rating" class="star-rating"></div>
-                                {{ ratingform.eco_friendly_practices(style='display: none;') }}
-                            </div>
-                            <div class="rating-group">
-                                <label>Safety & Security</label>
-                                <div id="safety_security-rating" class="star-rating"></div>
-                                {{ ratingform.safety_security(style='display: none;') }}
-                            </div>
-                        </div>
-                        <div class="rating-row">
-                            <div class="rating-group">
-                                <label>Recreational Opportunities</label>
-                                <div id="recreational_opportunities-rating" class="star-rating"></div>
-                                {{ ratingform.recreational_opportunities(style='display: none;') }}
-                            </div>
-                            <div class="rating-group">
-                                <label>Community Engagement</label>
-                                <div id="community_engagement-rating" class="star-rating"></div>
-                                {{ ratingform.community_engagement(style='display: none;') }}
-                            </div>
-                        </div>
-                        <div class="rating-row">
-                            <div class="rating-group">
-                                <label>Educational Value</label>
-                                <div id="educational_value-rating" class="star-rating"></div>
-                                {{ ratingform.educational_value(style='display: none;') }}
-                            </div>
-                            <div class="rating-group">
-                                <label>Scenic Beauty</label>
-                                <div id="scenic_beauty-rating" class="star-rating"></div>
-                                {{ ratingform.scenic_beauty(style='display: none;') }}
-                            </div>
-                        </div>
-                    </fieldset>
-                    {{ ratingform.text.label }}
-                     <textarea {{ ratingform.text }} ></textarea>
-                    <br>
-                    <button type="submit" class="btn">{{ ratingform.submit.label }}</button>
-                </form>
-            {% endif %}
-        </div>
+                            
 
         <script>
             document.querySelectorAll('.star-rating').forEach((ratingDiv) => {
@@ -378,16 +304,34 @@
                 }
             }
         
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
+                const containerWidth = document.querySelector('.photo-grid-container').offsetWidth;
+                const itemWidth = document.querySelector('.photo-grid-item').offsetWidth;
+                const itemsPerRow = Math.floor(containerWidth / itemWidth);
+                const totalRows = 2;
+                const totalItems = document.querySelectorAll('.photo-grid-item').length;
+                const totalPages = Math.ceil(totalItems / (itemsPerRow * totalRows));
+                
+                function updatePaginationVisibility() {
+                    const paginationButtons = document.querySelector('.pagination');
+                    if (totalPages <= 1) {
+                        paginationButtons.style.display = 'none';
+                    } else {
+                        paginationButtons.style.display = 'flex';
+                    }
+                }
+
+                updatePaginationVisibility();
+
+                window.addEventListener('resize', () => {
+                    updatePaginationVisibility();
+                });
+                
                 let currentPage = 1;
-                const itemsPerPage = 9; // Assuming 3x3 grid
-                const gridItems = document.querySelectorAll('.photo-grid-item'); // Renamed variable to avoid conflict
-                const totalPages = Math.ceil(gridItems.length / itemsPerPage);
-        
                 function showPage(page) {
-                    const start = (page - 1) * itemsPerPage;
-                    const end = start + itemsPerPage;
-                    gridItems.forEach((item, index) => { // Updated variable name here
+                    const start = (page - 1) * (itemsPerRow * totalRows);
+                    const end = start + (itemsPerRow * totalRows);
+                    document.querySelectorAll('.photo-grid-item').forEach((item, index) => {
                         if (index >= start && index < end) {
                             item.style.display = '';
                         } else {
@@ -395,7 +339,7 @@
                         }
                     });
                 }
-        
+
                 function paginate(direction) {
                     currentPage += direction;
                     if (currentPage < 1) {
@@ -405,45 +349,62 @@
                     }
                     showPage(currentPage);
                 }
-        
+
                 showPage(1);
-        
+
+                document.querySelectorAll('.pagination button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const direction = this.innerText.includes('Prev') ? -1 : 1;
+                        paginate(direction);
+                    });
+                });
+
                 const lightbox = document.createElement('div');
                 lightbox.className = 'lightbox';
                 document.body.appendChild(lightbox);
 
                 document.querySelectorAll('.photo-grid-item img').forEach(photo => {
-                    photo.addEventListener('click', () => {
-                        lightbox.style.display = 'flex';
+        photo.addEventListener('click', () => {
+            lightbox.style.display = 'flex';
 
-                        const contentWrapper = document.createElement('div');
-                        contentWrapper.className = 'lightbox-content';
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'lightbox-content';
 
-                        const img = document.createElement('img');
-                        img.src = photo.src;
-                        contentWrapper.appendChild(img);
+            const img = document.createElement('img');
+            img.src = photo.src;
+            contentWrapper.appendChild(img);
 
-                        const deleteButton = document.createElement('button');
-                        deleteButton.innerText = 'Delete';
-                        deleteButton.className = 'lightbox-button btn btn-danger';
-                        deleteButton.onclick = function () {
-                            photo.nextElementSibling.submit(); // Assumes the form is immediately after the image.
-                        };
-                        contentWrapper.appendChild(deleteButton);
+            const deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Delete';
+            deleteButton.className = 'lightbox-button btn btn-danger';
+            deleteButton.onclick = function () {
+                photo.nextElementSibling.submit(); // Trigger form submission for deletion
+            };
+            contentWrapper.appendChild(deleteButton);
 
-                        // Clear previous content and add the new content wrapper.
-                        while (lightbox.firstChild) {
-                            lightbox.removeChild(lightbox.firstChild);
-                        }
-                        lightbox.appendChild(contentWrapper);
-                    });
-                });
+            // Create cancel button
+            const cancelButton = document.createElement('button');
+            cancelButton.innerHTML = 'X';
+            cancelButton.className = 'cancel-button';
+            cancelButton.onclick = function() {
+                lightbox.style.display = 'none';
+            };
+            contentWrapper.appendChild(cancelButton);
 
-                lightbox.addEventListener('click', e => {
-                    if (e.target !== e.currentTarget) return;
-                    lightbox.style.display = 'none';
-                });
-            });
+            // Clear previous content and add new content to lightbox
+            while (lightbox.firstChild) {
+                lightbox.removeChild(lightbox.firstChild);
+            }
+            lightbox.appendChild(contentWrapper);
+        });
+    });
+
+    lightbox.addEventListener('click', e => {
+        // Modify this to not close the lightbox when clicking inside it
+        if (e.target !== e.currentTarget && !e.target.matches('.cancel-button')) return;
+        lightbox.style.display = 'none';
+    });
+});
         </script>
         
 {% endblock %}

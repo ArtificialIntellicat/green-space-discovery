@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
 {% block head %}
-    <title>Your User Profile</title>
+    <title>Dein Profil</title>
 {% endblock %}
 
 {% block body %}
     <div class="user-profile-card">
         <div class="profile_pic">
-            <img src="{{ url_for('static', filename='uploads/user_profile_pics/' ~ user.profile_pic) }}" alt="{{ user.username }}'s Profile Picture">
+            <img src="{{ url_for('static', filename='uploads/user_profile_pics/' ~ user.profile_pic) }}" alt="{{ user.username }}s Profilbild">
         </div>
         <div class="user-info">
             <h2>{{ user.username }}</h2>
-            <p>Email: {{ user.email }}</p>
-            <p>Member since: {{ user.date_created.date() }}</p>
+            <p>E-Mail: {{ user.email }}</p>
+            <p>Mitglied seit: {{ user.date_created.date() }}</p>
         </div>
         <div class="profile-actions">
-            <a href="{{ url_for('change_login_data') }}" class="btn-change-data">Change Login Data</a>
+            <a href="{{ url_for('change_login_data') }}" class="btn-change-data">Login-Daten ändern</a>
         </div>
     </div>
 {% endblock %}

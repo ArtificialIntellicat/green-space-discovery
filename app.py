@@ -34,21 +34,15 @@ def inject_login_form():
 def make_shell_context():
     return {'db': db, 'Community': Community, 'Space': Space, 'User': User}
 
-# INDEX
 @app.route('/', methods=['GET', 'POST'])
 def index():
     spaces = Space.query.order_by(Space.date_created.desc()).all()
-    #ratings = Rating.query.with_entities(
-    #    Rating.space_id,
-    #    func.avg((Rating.cleanliness + Rating.facilities + Rating.accessibility + Rating.natural_diversity + Rating.eco_friendly_practices + Rating.safety_security + Rating.recreational_opportunities + Rating.community_engagement + Rating.educational_value + Rating.scenic_beauty)/10).label('average_rating'),
-    #    Rating.text
-    #).group_by(Rating.space_id).all()
-
-    # Prepare rating data for display
-    #rating_info = {r.space_id: {'text': r.text[:50], 'average_rating': round(r.average_rating)} for r in ratings}
-    rating_info = 0
-
-    return render_template('index.html', spaces=spaces, rating_info=rating_info)
+    ratings = {}
+    for space in spaces:
+        space_ratings = Rating.query.filter_by(space_id=space.id).all()
+        if space_ratings:
+            ratings[space.id] = space_ratings  # Assuming you want all ratings for each space
+    return render_template('index.html', spaces=spaces, ratings=ratings)
 
 # USER LOGIN
 def is_safe_url(target):
